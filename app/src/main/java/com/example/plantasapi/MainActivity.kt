@@ -4,7 +4,6 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import android.util.Log
 import android.view.MenuItem
 import android.widget.Button
 import android.widget.EditText
@@ -27,7 +26,9 @@ import retrofit2.Callback
 import retrofit2.Response
 import java.io.File
 import java.io.IOException
-import java.io.Serializable
+import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody
 
 class MainActivity : AppCompatActivity() {
 
@@ -154,6 +155,11 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "Por favor, completa todos los campos", Toast.LENGTH_SHORT).show()
             }
         }
+
+        // Suponiendo que ya tienes un URI de la imagen
+        val imageUri: Uri = Uri.parse("ruta/a/tu/imagen") // Sustituir con la URI real de la imagen
+
+        sendImageToApi(imageUri)
     }
 
     private val plantRepository = PlantRepository()
@@ -164,19 +170,22 @@ class MainActivity : AppCompatActivity() {
             val base64Image = Base64Utils.encodeImageToBase64(imageFile) // Convertir a Base64
 
             val apiKey = "sEixZy7KfUHkkNCGJEVrhWd1PM40grwOTbiaQtaUfTsFaIBsem" // Tu API Key
-            val base64Images = listOf(base64Image)  // Convertir en una lista
-            val call = plantRepository.identifyPlantBase64(base64Images, apiKey)
 
+            val imagesJson = """{
+            "images": ["data:image/jpg;base64,$base64Image"]
+        }"""
 
-            call.enqueue(object : Callback<ResponseBody> {
+            // Convertir el JSON a RequestBody
+            val requestBody = RequestBody.create("application/json".toMediaType(), imagesJson)
+
+            // Llamar al repositorio para hacer la solicitud
+            plantRepository.identifyPlantBase64(apiKey, requestBody).enqueue(object : Callback<ResponseBody> {
                 override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                     if (response.isSuccessful) {
                         Toast.makeText(this@MainActivity, "Planta identificada exitosamente", Toast.LENGTH_SHORT).show()
                     } else {
                         val errorBody = response.errorBody()?.string() ?: "Sin mensaje de error"
                         Toast.makeText(this@MainActivity, "Error: ${response.code()} - $errorBody", Toast.LENGTH_LONG).show()
-                        Log.d("Base64 Image", base64Image)
-
                     }
                 }
 
@@ -188,10 +197,6 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
-
-
-
-
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return if (item.itemId == android.R.id.home) {
             drawerLayout.openDrawer(GravityCompat.START)

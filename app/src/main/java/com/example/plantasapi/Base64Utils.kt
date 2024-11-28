@@ -12,8 +12,6 @@ object Base64Utils {
             return Base64.encodeToString(bytes, Base64.NO_WRAP)
         } finally {
             inputStream.close()
-
         }
     }
 }
-

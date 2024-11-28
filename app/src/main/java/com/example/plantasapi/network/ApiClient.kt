@@ -1,4 +1,3 @@
-// ApiClient.kt
 package com.example.plantasapi.network
 
 import retrofit2.Retrofit
