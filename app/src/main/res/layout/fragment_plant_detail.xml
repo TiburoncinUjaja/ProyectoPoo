@@ -1,0 +1,42 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <ImageView
+        android:id="@+id/plantImageDetail"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:src="@drawable/ic_plants2" />
+
+    <TextView
+        android:id="@+id/plantNameDetail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Plant Name"
+        android:textSize="18sp"
+        android:paddingTop="8dp"/>
+
+    <TextView
+        android:id="@+id/plantDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Description"
+        android:paddingTop="8dp"/>
+
+    <TextView
+        android:id="@+id/plantPeriod"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Watering Period"
+        android:paddingTop="8dp"/>
+
+    <TextView
+        android:id="@+id/plantUrl"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="More Info"
+        android:textColor="@android:color/holo_blue_dark"
+        android:paddingTop="8dp"/>
+</LinearLayout>

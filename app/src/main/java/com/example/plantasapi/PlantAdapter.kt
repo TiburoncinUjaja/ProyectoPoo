@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.plantasapi.models.Plant
@@ -42,6 +43,8 @@ class PlantAdapter(
 
             // Agregar acción al hacer clic
             itemView.setOnClickListener {
+                val dialog = PlantDetailDialogFragment(plant)
+                dialog.show((context as AppCompatActivity).supportFragmentManager, "plantDetail")
                 onClick(plant)
             }
         }

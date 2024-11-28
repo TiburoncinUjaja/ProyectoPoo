@@ -8,6 +8,7 @@ data class Plant(
     val name: String,
     val waterPeriod: Int,
     val imageUri: Uri
+
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readString() ?: "",
