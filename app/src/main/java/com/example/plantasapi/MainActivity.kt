@@ -4,20 +4,30 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import android.view.MenuItem
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import androidx.core.content.FileProvider
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.material.navigation.NavigationView
-import androidx.appcompat.widget.Toolbar
+import com.example.plantasapi.models.Plant
+import com.example.plantasapi.repository.PlantRepository
+import com.example.plantasapi.utils.FileUtils
+import okhttp3.ResponseBody
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.io.File
 import java.io.IOException
+import java.io.Serializable
 
 class MainActivity : AppCompatActivity() {
 
@@ -25,7 +35,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var imageView: ImageView
     private lateinit var cameraLauncher: ActivityResultLauncher<Intent>
     private lateinit var galleryLauncher: ActivityResultLauncher<Intent>
-    private lateinit var photoUri: Uri
+    private var photoUri: Uri? = null
+    private val plantsList = mutableListOf<Plant>()
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,12 +64,11 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_home -> {
                     val intent = Intent(this, MainActivity::class.java)
                     startActivity(intent)
-                    finish()
                 }
                 R.id.nav_registered_plants -> {
                     val intent = Intent(this, RegisteredPlantsActivity::class.java)
+                    intent.putParcelableArrayListExtra("plantsList", ArrayList(plantsList))
                     startActivity(intent)
-                    finish()
                 }
                 R.id.nav_about_api -> {
                     val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.kindwise.com/plant-id"))
@@ -66,7 +77,6 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_about_us -> {
                     val intent = Intent(this, AboutUsActivity::class.java)
                     startActivity(intent)
-                    finish()
                 }
                 R.id.nav_exit -> finish()
             }
@@ -75,22 +85,17 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Configuración del botón "Atrás" para el menú lateral
-        fun onBackPressed() {
-            if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-                drawerLayout.closeDrawer(GravityCompat.START)
-            } else {
-                super.onBackPressed()
-            }
-        }
-
         imageView = findViewById(R.id.imageView)
         val btnCamera: Button = findViewById(R.id.btnCamera)
         val btnGallery: Button = findViewById(R.id.btnGallery)
+        val btnSave: Button = findViewById(R.id.btnSave)
+        val etPlantName: EditText = findViewById(R.id.etPlantName)
+        val etWaterPeriod: EditText = findViewById(R.id.etWaterPeriod)
 
         // Configurar lanzadores para cámara y galería
         cameraLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
-                imageView.setImageURI(photoUri) // Mostrar la imagen capturada
+                photoUri?.let { uri -> imageView.setImageURI(uri) } // Mostrar la imagen capturada
             } else {
                 Toast.makeText(this, "Captura cancelada", Toast.LENGTH_SHORT).show()
             }
@@ -99,6 +104,7 @@ class MainActivity : AppCompatActivity() {
         galleryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
                 val imageUri: Uri? = result.data?.data
+                photoUri = imageUri
                 imageView.setImageURI(imageUri)
             } else {
                 Toast.makeText(this, "Selección cancelada", Toast.LENGTH_SHORT).show()
@@ -125,7 +131,66 @@ class MainActivity : AppCompatActivity() {
             val galleryIntent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
             galleryLauncher.launch(galleryIntent)
         }
+
+        // Botón para guardar la planta
+        btnSave.setOnClickListener {
+            val plantName = etPlantName.text.toString()
+            val waterPeriod = etWaterPeriod.text.toString().toIntOrNull() ?: 0
+
+            if (plantName.isNotEmpty() && waterPeriod > 0 && photoUri != null) {
+                val newPlant = Plant(plantName, waterPeriod, photoUri!!)
+                plantsList.add(newPlant) // Agregar planta a la lista
+
+                sendImageToApi(photoUri!!)
+
+                Toast.makeText(this, "Planta guardada", Toast.LENGTH_SHORT).show()
+
+                // Limpiar campos
+                etPlantName.text.clear()
+                etWaterPeriod.text.clear()
+                imageView.setImageDrawable(null)
+                photoUri = null
+            } else {
+                Toast.makeText(this, "Por favor, completa todos los campos", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
+
+    private val plantRepository = PlantRepository()
+
+    private fun sendImageToApi(uri: Uri) {
+        try {
+            val imageFile = FileUtils.copyUriToFile(this, uri) // Asegura que es un archivo válido
+            val base64Image = Base64Utils.encodeImageToBase64(imageFile) // Convertir a Base64
+
+            val apiKey = "sEixZy7KfUHkkNCGJEVrhWd1PM40grwOTbiaQtaUfTsFaIBsem" // Tu API Key
+            val base64Images = listOf(base64Image)  // Convertir en una lista
+            val call = plantRepository.identifyPlantBase64(base64Images, apiKey)
+
+
+            call.enqueue(object : Callback<ResponseBody> {
+                override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                    if (response.isSuccessful) {
+                        Toast.makeText(this@MainActivity, "Planta identificada exitosamente", Toast.LENGTH_SHORT).show()
+                    } else {
+                        val errorBody = response.errorBody()?.string() ?: "Sin mensaje de error"
+                        Toast.makeText(this@MainActivity, "Error: ${response.code()} - $errorBody", Toast.LENGTH_LONG).show()
+                        Log.d("Base64 Image", base64Image)
+
+                    }
+                }
+
+                override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                    Toast.makeText(this@MainActivity, "Error al conectar con la API: ${t.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
+        } catch (e: Exception) {
+            Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+
+
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return if (item.itemId == android.R.id.home) {
@@ -133,6 +198,14 @@ class MainActivity : AppCompatActivity() {
             true
         } else {
             super.onOptionsItemSelected(item)
+        }
+    }
+
+    override fun onBackPressed() {
+        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START)
+        } else {
+            super.onBackPressed()
         }
     }
 

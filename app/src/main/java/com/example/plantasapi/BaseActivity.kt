@@ -9,6 +9,9 @@ import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.material.navigation.NavigationView
 import androidx.appcompat.widget.Toolbar
+import com.example.plantasapi.models.Plant
+private var photoUri: Uri? = null
+private val plantsList = mutableListOf<Plant>()
 
 open class BaseActivity : AppCompatActivity() {
 
@@ -41,6 +44,7 @@ open class BaseActivity : AppCompatActivity() {
                 }
                 R.id.nav_registered_plants -> {
                     val intent = Intent(this, RegisteredPlantsActivity::class.java)
+                    intent.putParcelableArrayListExtra("plantsList", ArrayList(plantsList))
                     startActivity(intent)
                 }
                 R.id.nav_about_api -> {
@@ -58,7 +62,7 @@ open class BaseActivity : AppCompatActivity() {
             true
         }
     }
-
+/*
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return if (item.itemId == android.R.id.home) {
             drawerLayout.openDrawer(GravityCompat.START)
@@ -66,7 +70,7 @@ open class BaseActivity : AppCompatActivity() {
         } else {
             super.onOptionsItemSelected(item)
         }
-    }
+    } */
 
     override fun onBackPressed() {
         if (drawerLayout.isDrawerOpen(GravityCompat.START)) {

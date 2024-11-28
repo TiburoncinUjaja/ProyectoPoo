@@ -6,7 +6,11 @@ import android.os.Bundle
 import android.view.MenuItem
 import android.widget.Toolbar
 import androidx.core.view.GravityCompat
+import com.example.plantasapi.models.Plant
 import com.google.android.material.navigation.NavigationView
+
+private var photoUri: Uri? = null
+private val plantsList = mutableListOf<Plant>()
 
 class AboutUsActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,6 +46,7 @@ class AboutUsActivity : BaseActivity() {
 
                 R.id.nav_registered_plants -> {
                     val intent = Intent(this, RegisteredPlantsActivity::class.java)
+                    intent.putParcelableArrayListExtra("plantsList", ArrayList(plantsList))
                     startActivity(intent)
                     finish()
                 }
