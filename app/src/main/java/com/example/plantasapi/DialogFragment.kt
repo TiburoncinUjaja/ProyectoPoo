@@ -12,6 +12,7 @@ import androidx.fragment.app.DialogFragment
 import com.bumptech.glide.Glide
 import com.example.plantasapi.models.Plant
 
+
 class PlantDetailDialogFragment(private val plant: Plant) : DialogFragment() {
 
     override fun onCreateView(
@@ -26,24 +27,20 @@ class PlantDetailDialogFragment(private val plant: Plant) : DialogFragment() {
 
         val plantName = view.findViewById<TextView>(R.id.plantNameDetail)
         val plantImage = view.findViewById<ImageView>(R.id.plantImageDetail)
-        //val plantDescription = view.findViewById<TextView>(R.id.plantDescription)
-        //val plantPeriod = view.findViewById<TextView>(R.id.plantPeriod)
-        //val plantUrl = view.findViewById<TextView>(R.id.plantUrl)
+        val plantPeriod = view.findViewById<TextView>(R.id.plantPeriod)
+        val plantProbability = view.findViewById<TextView>(R.id.plantProbability)
+        val apiName = view.findViewById<TextView>(R.id.plantApiName)  // Nueva TextView para el nombre de la API
 
         // Configurar los datos de la planta
         plantName.text = plant.name
         Glide.with(requireContext())
             .load(plant.imageUri.toString())
             .into(plantImage)
-        //plantDescription.text = plant.description  // Asegúrate de que esto venga de la API
-        //plantPeriod.text = plant.period  // Asegúrate de que esto venga de la API
-        //plantUrl.text = plant.url  // Asegúrate de que esto venga de la API
 
-        // Configurar el clic en la URL para abrir el navegador
-        //plantUrl.setOnClickListener {
-            //val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(plant.url))
-            //startActivity(browserIntent)
-        }
+        plantProbability.text = "Probabilidad: ${plant.probability * 100}%"
+        plantPeriod.text = "Regar cada ${plant.waterPeriod} dias"
+        // Mostrar el nombre sugerido por la API debajo de la probabilidad
+        apiName.text = "Con mas coincidencia: ${plant.apiSuggestedName ?: "No disponible"}"
+
     }
-
-
+}

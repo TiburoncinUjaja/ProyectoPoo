@@ -13,12 +13,12 @@ import com.example.plantasapi.models.Plant
 
 class PlantAdapter(
     private val context: Context,
-    private val plants: List<Plant>,
-    private val onClick: (Plant) -> Unit // Para manejar los clics en las fichas
+    private val plants: MutableList<Plant>,  // Cambiar a MutableList para poder modificar la lista
+    private val onClick: (Plant) -> Unit      // Para manejar los clics en las fichas
 ) : RecyclerView.Adapter<PlantAdapter.PlantViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlantViewHolder {
-        val view = LayoutInflater.from(context).inflate(R.layout.item_plant, parent, false)
+        val view = LayoutInflater.from(context).inflate(R.layout.fragment_plant_detail, parent, false)
         return PlantViewHolder(view)
     }
 
@@ -29,9 +29,16 @@ class PlantAdapter(
 
     override fun getItemCount(): Int = plants.size
 
+    // Método para agregar una nueva planta
+    fun addPlant(plant: Plant) {
+        plants.add(plant)  // Agregar la planta a la lista
+        notifyItemInserted(plants.size - 1)  // Notificar que se insertó un nuevo ítem
+    }
+
     inner class PlantViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val plantImage: ImageView = itemView.findViewById(R.id.plantImage)
-        private val plantName: TextView = itemView.findViewById(R.id.plantName)
+        private val plantImage: ImageView = itemView.findViewById(R.id.plantImageDetail)
+        private val plantName: TextView = itemView.findViewById(R.id.plantNameDetail)
+
 
         fun bind(plant: Plant) {
             // Cargar imagen
